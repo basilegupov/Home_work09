@@ -1,74 +1,104 @@
-""""hello", відповідає у консоль "How can I help you?" "add ...". За цією командою бот зберігає у пам'яті (у словнику
-наприклад) новий контакт. Замість ... користувач вводить ім'я та номер телефону, обов'язково через пробіл. "change
-..." За цією командою бот зберігає в пам'яті новий номер телефону існуючого контакту. Замість ... користувач вводить
-ім'я та номер телефону, обов'язково через пробіл. "phone ...." За цією командою бот виводить у консоль номер телефону
-для зазначеного контакту. Замість ... користувач вводить ім'я контакту, чий номер треба показати. "show all". За цією
-командою бот виводить всі збереженні контакти з номерами телефонів у консоль. "good bye", "close", "exit" по
-будь-якій з цих команд бот завершує свою роботу після того, як виведе у консоль "Good bye!"."""
-
 
 phonebook = {}
-LIST_COMMANDS = ['hello', 'add', 'change', 'phone', 'show all', 'good bye', 'close', 'exit', '.']
 
 
-def parse_command(input_str):
-    input_str = input_str.lower().split()
-
-    command_str = ' '.join(input_str)
-    print(command_str)
-    return command_str
+def input_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ValueError as e:
+            return e
+        except IndexError:
+            return "Contact not found"
+    return wrapper
 
 
 def hello():
     return "How can I help you?"
 
 
+@input_error
 def add_phone(name: str, number: str):
-    # rec = phonebook.get(name, '')
-    phonebook[name] = number
+    if name in phonebook:
+        raise ValueError(f'Contact {name} already exist.')
+    else:
+        phonebook[name] = number
+        return f'Contact {name} with phone {number} added.'
 
 
+@input_error
 def change_phone(name: str, number: str):
-    phonebook[name] = number
+    if name in phonebook:
+        phonebook[name] = number
+        return f'Phone number of contact {name} changed to {number}.'
+    else:
+        raise IndexError
 
 
+@input_error
 def show_phone(name: str):
-    return phonebook[name]
+    if name in phonebook:
+        return f'{name}: {phonebook[name]}'
+    else:
+        raise IndexError
 
 
 def show_all():
-    for name, number in phonebook:
-        print(f'Name: {name} phone:{number}')
+    if not phonebook:
+        return 'Phonebook is empty.'
+    phonebook_str = '|{:^16}|{:^16}|'.format('Name', 'Phone number') + '\n'
+    for name, number in phonebook.items():
+        phonebook_str += '|{:<16}|{:>16}|'.format(name, number) + '\n'
+
+    return phonebook_str
 
 
 def bye():
     return "Good bye!"
 
 
-def command_handler(command_str):
-    if command_str in LIST_COMMANDS:
-
-    result = ''
-    return result
-
-
-def main(user_input):
+def main():
     while True:
-        # user_input = input('Enter >>')
-        command = parse_command(user_input)
-        print(command)
-        result = command_handler(command)
-        print(result)
-        break
+        try:
+            input_str = input('Enter command>>').strip()
+            if not input_str:
+                raise ValueError("Empty command. Please try again.")
+            command, *parameter = input_str.split(' ')
+            command = command.lower()
+            if command == 'hello':
+                print(hello())
+            elif command == 'add':
+                if len(parameter) != 2:
+                    raise ValueError('Invalid parameters. Try again. Use "add <contact name> <phone number>"')
+                else:
+                    print(add_phone(*parameter))
+            elif command == 'change':
+                if len(parameter) != 2:
+                    raise ValueError('Invalid parameters. Try again. Use "change <contact name> <phone number>"')
+                else:
+                    print(change_phone(*parameter))
+            elif command == 'phone':
+                if not parameter:
+                    raise ValueError('Invalid parameter. Try again. Use "phone <contact name>"')
+                print(show_phone(parameter[0]))
+            elif command == 'show':
+                if not parameter or not parameter[0] == 'all':
+                    raise ValueError('Invalid command. Try again. Use "show all"')
+                print(show_all())
+            elif command == 'good':
+                if not parameter or not parameter[0] == 'by':
+                    raise ValueError('Invalid command. Try again. Use "good by"')
+                print(bye())
+                break
+            elif (command == 'close' or
+                  command == 'exit'):
+                print(bye())
+                break
+            else:
+                raise ValueError("Invalid command. Please try again.")
+        except ValueError as e:
+            print(e)
 
 
 if __name__ == '__main__':
-    main('add Basil +380505852071')
-    main('add Basil1 +380505852072')
-    main('add Basil2 +380505852073')
-    main('add Basil3 +380505852074')
-    main('add Basil4 +380505852075')
-    main('add Basil5 +380505852076')
-    main('add Basil6 +380505852077')
-    main('add Basil7 +380505852078')
-    main('show all')
+    main()
