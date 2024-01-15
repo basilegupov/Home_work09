@@ -106,10 +106,9 @@ def main():
         try:
             command_str = parsing_input(input_str)
             command, *parameters = command_str.split()
-            if command in COMMANDS:
-                print(get_command(command)(*parameters))
-                if command in ['exit', 'close', 'good']:
-                    break
+            print(get_command(command)(*parameters))
+            if command in ['exit', 'close', 'good']:
+                break
         except Exception as e:
             print(e)
 
